@@ -1,0 +1,156 @@
+﻿<HTML>
+<HEAD>
+    <meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987" />
+    <style>
+        body {
+            font-size: 20px;
+            color: white;
+        }
+
+        div {
+            font-size: 20px;
+
+        }
+
+        a {
+            border: 0px none;
+            text-decoration: none;
+        }
+
+        img {
+            border: 0px;
+        }
+
+        #phone_screen {
+            position: absolute;
+            top: 60px;
+            left: 13px;
+            z-index: 10;
+            width: 349px;
+            height: 509px;
+            background-color: #121212;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        input, select {
+            border: 0px none;
+        }
+
+        #search {
+            margin-right: 15px;
+            width: 260px;
+        }
+
+        #search_button {
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #top_menu {
+            margin-top: 10px;
+        }
+
+            #top_menu td {
+                text-align: center;
+                border-bottom: 0px none;
+                color: dodgerblue;
+                font-weight: bold;
+                font-size: 15px;
+            }
+
+        tr {
+        }
+
+        td {
+            font-size: 15px;
+            height: 48px;
+            border-bottom: 1px solid;
+        }
+
+        #address_list td a {
+            color: white;
+        }
+
+        #address_add_info_table {
+            overflow:hidden;
+            overflow-x:hidden;
+            
+            width:100%;
+            height:450px;
+        }
+
+            #address_add_info_table td {
+                text-align: center;
+            }
+    </style>
+</HEAD>
+<BODY ID=CMyPhoneDlg BGCOLOR=LIGHTGREY style="font-family:MS Shell Dlg; margin:0; padding:0;">
+
+    <img src="res:/GIF/#131" style="position:absolute;" />
+    <a href="#"><img src="res:/GIF/#140" style="position:absolute; top:580px; left:152px;" id="BUTTON_GO_MAIN" /></a>
+    <div id="phone_screen">
+        
+        <div id="address_book_apps">
+            
+            <table id="top_menu">
+                <tr>
+                    <td><a href="#" id="ADD_ADDRESS">Add</a></td>
+                    <td><a href="#" id="BUTTON_ADDRESS_BOOK">Go back</a></td>
+                </tr>
+            </table>
+
+            <div id="address_add_info_table">
+                <table>
+                    <tr>
+                        <td>Name</td>
+                        <td><input type="text" id="ADDRESS_ADD_NAME"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>Number 1</td>
+                        <td><input type="text" id="ADDRESS_ADD_NUMBER1"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>Number 2</td>
+                        <td><input type="text" id="ADDRESS_ADD_NUMBER2"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>Number 3</td>
+                        <td><input type="text" id="ADDRESS_ADD_NUMBER3"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>Home</td>
+                        <td><input type="text" id="ADDRESS_ADD_HOME"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>Office</td>
+                        <td><input type="text" id="ADDRESS_ADD_OFFICE"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>E-mail</td>
+                        <td><input type="text" id="ADDRESS_ADD_EMAIL"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>URL</td>
+                        <td><input type="text" id="ADDRESS_ADD_URL"/></td>
+                    </tr>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+
+
+</BODY>
+</HTML>
