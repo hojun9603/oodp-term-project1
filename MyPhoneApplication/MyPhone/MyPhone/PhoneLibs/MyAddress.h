@@ -20,6 +20,10 @@
 class MyAddress
 {
 /* Member Variables */
+private :
+	static int						AddressIDGenerator;
+	int								m_addressID;
+
 protected :
 	std::vector<PhoneNumber>		m_phoneNumbers;
 	std::string						m_name;
@@ -80,6 +84,8 @@ public :
 	size_t			GetBirthdayYear(void) const;
 	size_t			GetBirthdayMonth(void) const;
 	size_t			GetBirthdayDay(void) const;
+
+	int				GetAddressID(void) const;
 
 #define	MY_ADDR_BIRTHDAY_NOT_SET	0
 // if birthday is not set, return 0 in the method GetBirthdayYear(),

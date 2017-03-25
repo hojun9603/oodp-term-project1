@@ -1,0 +1,147 @@
+<HTML>
+<HEAD>
+    <meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987" />
+    <style>
+        body {
+            font-size: 15px;
+            color: white;
+        }
+
+        div {
+            font-size: 15px;
+        }
+
+        }
+
+        a {
+            border: 0px none;
+            color: white;
+            text-decoration: none;
+        }
+
+        img {
+            border: 0px;
+        }
+
+        #phone_screen {
+            position: absolute;
+            top: 60px;
+            left: 13px;
+            z-index: 10;
+            width: 349px;
+            height: 509px;
+            background-color: #121212;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        input {
+            border: 0px none;
+        }
+
+        #search {
+            margin-right: 15px;
+            width: 290px;
+        }
+
+        #search_button {
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        tr {
+        }
+
+        td {
+            font-size: 15px;
+            height: 50px;
+            border-bottom: 1px solid;
+            text-align: center;
+        }
+
+        #top_menu td {
+            height: 30px;
+            border: 0px none;
+        }
+
+        #top_menu a {
+            color: dodgerblue;
+        }
+
+        #message_content {
+            height:390px;
+        }
+
+        #message_log_table {
+            width:100%;
+            height:100%;
+            overflow:scroll;
+            overflow-x:hidden;
+        }
+
+        #message_log_table td{
+            width:100%;
+        }
+
+        #message_log_table span {
+            font-size:10px;
+        }
+
+        .receive {
+            text-align:left;
+            padding-left:15px;
+            background-color:deepskyblue;
+            color:black;
+        }
+
+        .send {
+            text-align:right;
+            padding-right:15px;
+            background-color:gold;
+            color:black;
+        }
+    </style>
+</HEAD>
+<BODY ID=CMyPhoneDlg BGCOLOR=LIGHTGREY style="font-family:MS Shell Dlg; margin:0; padding:0;">
+
+    <img src="res:/GIF/#131" style="position:absolute;" />
+    <a href="#"><img src="res:/GIF/#140" style="position:absolute; top:580px; left:152px;" id="BUTTON_GO_MAIN" /></a>
+    <div id="phone_screen">
+        <table id="top_menu">
+            <tr>
+                <td style="text-align:left"><a href="#" id="BUTTON_GO_BACK">Go back</a></td>
+                <td style="text-align:right">SMS Messages</td>
+            </tr>
+
+        </table>
+        <div id="message_log">
+            <table>
+                <tr>
+                    <td id="message_content">
+                        <div id="message_log_table">
+                            <table>
+                                <tr><td class="receive">Hello<br /><span>2014.01.01 23:12:11</span></td></tr>
+                                <tr><td class="send">Hi, how do you do?<br /><span>2014.01.01 23:12:11</span></td></tr>
+                                <tr><td class="receive">I'm fine, thank you, and you?<br /><span>2014.01.01 23:12:11</span></td></tr>
+                                <tr><td class="send">I'm good, too.<br /><span>2014.01.01 23:12:11</span></td></tr>
+                                <tr><td class="send">I'll give you 20 dollars.<br /><span>2014.01.01 23:12:11</span></td></tr>
+                            </table>
+                        </div>
+                    </td>
+                    
+                </tr>
+
+                <tr>
+                    <td><input type="text" id="SEND_MESSAGE_TEXT"> <input type="button" id="SEND_MESSAGE" value=" SEND " /></td>
+                    
+                </tr>
+            </table>
+        </div>
+    </div>
+
+
+</BODY>
+</HTML>

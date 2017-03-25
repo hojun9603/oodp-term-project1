@@ -38,7 +38,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -82,6 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -120,8 +121,6 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\Users\ksw38\Desktop\개발\oodp-term-project1\MyPhoneApplication\MyPhone\MyPhone\PhoneLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PhoneLibrary.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -148,6 +147,8 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>MyPhoneLibrary.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\PhoneLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -214,13 +215,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="AddressBook.htm">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="MyPhone.htm">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
     <None Include="res\AddAddress.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="res\AddressBook.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="res\calllog.htm">
@@ -233,7 +231,16 @@
     <None Include="res\modifyAddress.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="res\MyPhone.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="res\MyPhone.rc2" />
+    <None Include="res\personalMessage.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="res\whereToCall.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MyPhone.rc" />

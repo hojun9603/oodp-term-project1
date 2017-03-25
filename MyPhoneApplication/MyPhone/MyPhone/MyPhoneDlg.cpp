@@ -2,7 +2,12 @@
 // MyPhoneDlg.cpp : 구현 파일
 //
 
+
 #include "stdafx.h"
+
+#include <list>
+
+#include "PhoneLibs\Call.h"
 #include "MyPhone.h"
 #include "MyPhoneDlg.h"
 #include "afxdialogex.h"
@@ -49,17 +54,27 @@ END_MESSAGE_MAP()
 
 BEGIN_DHTML_EVENT_MAP(CMyPhoneDlg)
 	DHTML_EVENT_ONCLICK(_T("BUTTON_ADDRESS_BOOK"), OnButtonGoAddressBook)
-	DHTML_EVENT_ONCLICK(_T("BUTTON_MESSAGES"), OnButtonGoAddressBook)
-	DHTML_EVENT_ONCLICK(_T("BUTTON_CALLLOG"), OnButtonGoAddressBook)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_MESSAGES"), OnButtonGoMessages)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_CALLLOG"), OnButtonGoCallLog)
 	DHTML_EVENT_ONCLICK(_T("BUTTON_GO_MAIN"), OnButtonGoMain)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_GO_BACK"), OnButtonGoBack)
 	DHTML_EVENT_ONCLICK(_T("BUTTON_ADD_ADDRESS"), OnButtonAddAddressForm)
 	DHTML_EVENT_ONCLICK(_T("ADD_ADDRESS"), OnButtonAddAddress)
-	DHTML_EVENT_ONCLICK(_T("BUTTON_MODIFY_ADDRESS"), OnButtonModifyAddress)
+	DHTML_EVENT_ONCLICK(_T("MODIFY_ADDRESS"), OnButtonModifyAddress)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_MODIFY_ADDRESS"), OnButtonModifyAddressForm)
+	DHTML_EVENT_ONCLICK(_T("DELETE_ADDRESS"), OnButtonDeleteAddress)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_SEARCH"), OnButtonSearch)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_CALL"), OnButtonCall)
+	DHTML_EVENT_ONCLICK(_T("CALL_NUMBER"), OnButtonCallNumber)
+	DHTML_EVENT_ONCLICK(_T("BUTTON_PERSONAL_MESSAGE"), OnButtonPersonalMessage)
+	DHTML_EVENT_ONCLICK(_T("SEND_MESSAGE"), OnButtonSendMessage)
+	DHTML_EVENT_ONCLICK(_T("MESSAGE_VIEW"), OnButtonMessageView)
 END_DHTML_EVENT_MAP()
 
 
 CMyPhoneDlg::CMyPhoneDlg(CWnd* pParent /*=NULL*/)
-	: CDHtmlDialog(IDD_MYPHONE_DIALOG, IDR_HTML_MYPHONE_DIALOG, pParent)
+	: CDHtmlDialog(IDD_MYPHONE_DIALOG, IDR_HTML_MYPHONE_DIALOG, pParent),
+	m_addrBook()
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -67,12 +82,17 @@ CMyPhoneDlg::CMyPhoneDlg(CWnd* pParent /*=NULL*/)
 void CMyPhoneDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDHtmlDialog::DoDataExchange(pDX);
-	DDX_DHtml_ElementInnerHtml(pDX, _T("address_book_app"), m_sAddressBookAppCode);
 	DDX_DHtml_ElementInnerHtml(pDX, _T("address_list"), m_sAddressListCode);
+	DDX_DHtml_ElementInnerHtml(pDX, _T("address_modify_info_table"), m_sAddressBookModfyCode);
+	DDX_DHtml_ElementInnerHtml(pDX, _T("address_where_to_call_table"), m_sWhereToCallCode);
+	DDX_DHtml_ElementInnerHtml(pDX, _T("call_log_table"), m_sCallLogCode);
+	DDX_DHtml_ElementInnerHtml(pDX, _T("message_log_table"), m_sPersonalMessageBoxCode);
+	DDX_DHtml_ElementInnerHtml(pDX, _T("message_table"), m_sMessageListCode);
 }
 
 BEGIN_MESSAGE_MAP(CMyPhoneDlg, CDHtmlDialog)
 	ON_WM_SYSCOMMAND()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -106,6 +126,30 @@ BOOL CMyPhoneDlg::OnInitDialog()
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 	UpdateData(FALSE);
+
+	int failedToLoadCnt = 0;
+	CString errorMsg;
+
+	try
+	{
+		failedToLoadCnt = m_addrBook.LoadAddressFile(ADDRESS_DATA_FILE);
+		if (failedToLoadCnt > 0)
+		{
+			errorMsg.Format(_T("Failed to load %d number(s) due to wrong syntax or duplicated phone numbers..\nThey are ignored!"),
+				failedToLoadCnt);
+			AfxMessageBox(errorMsg);
+		}
+	}
+	catch (AddressLoadFailException e)
+	{
+		int ret = AfxMessageBox(_T("Error while loading address data file.. Renew the data file or exit program?"), MB_OKCANCEL);
+		if (ret != IDOK) return FALSE;
+	}
+	
+	failedToLoadCnt = m_addrBook.LoadCallsFile(CALL_DATA_FILE);
+	failedToLoadCnt = m_addrBook.LoadMessageFile(MESSAGE_DATA_FILE);
+
+	MoveWindow(0, 0, 393, 714);
 
 	return TRUE;
 }
@@ -154,28 +198,39 @@ HCURSOR CMyPhoneDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+//
+//  Event Handlings
+//
+///////////////////////////////////////////////////////////////////////////////////////
+
 HRESULT CMyPhoneDlg::OnButtonGoAddressBook(IHTMLElement* /*pElement*/)
 {
+	// update address list from address book and go to the list
 	UpdateAddressListCode();
+	m_previousHTMLResource = IDR_HTML_ADDRESS_BOOK;
 	NavigateToResource(IDR_HTML_ADDRESS_BOOK);
 	return S_OK;
 }
 
 HRESULT CMyPhoneDlg::OnButtonGoMessages(IHTMLElement *pElement)
 {
+	UpdateMessageListCode();
 	NavigateToResource(IDR_HTML_MESSAGE);
 	return S_OK;
 }
 
 HRESULT CMyPhoneDlg::OnButtonGoCallLog(IHTMLElement *pElement)
 {
+	UpdateCallLogListCode();
+	m_previousHTMLResource = IDR_HTML_CALL_LOG;
 	NavigateToResource(IDR_HTML_CALL_LOG);
 	return S_OK;
 }
 
-HRESULT CMyPhoneDlg::OnButtonCancel(IHTMLElement* /*pElement*/)
+HRESULT CMyPhoneDlg::OnButtonGoBack(IHTMLElement *pElement)
 {
-	OnCancel();
+	NavigateToResource(m_previousHTMLResource);
 	return S_OK;
 }
 
@@ -194,41 +249,231 @@ HRESULT CMyPhoneDlg::OnButtonAddAddressForm(IHTMLElement *pElement)
 HRESULT CMyPhoneDlg::OnButtonAddAddress(IHTMLElement *pElement)
 {
 	MyAddress address;
+
+	// check address form and if not valid return failed
+	if(CheckSetAddressFromForm(address) == S_FALSE) return S_FALSE;
+
+	// if valid form syntax, add the address
+	m_addrBook.AddAddress(address);
+	UpdateAddressListCode();
+	NavigateToResource(IDR_HTML_ADDRESS_BOOK);
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonModifyAddress(IHTMLElement *pElement)
+{
+	// get access key for getting the index of address
+	int key = GetAccessKeyFromHTML(_T("ModifyTable"));
+
+	MyAddress address, copy = *(m_addrBook.GetAddress(key));
+
+	// check the modified data
+	m_addrBook.DeleteAddress(key);
+	if (CheckSetAddressFromForm(address) == S_FALSE)
+	{
+		m_addrBook.AddAddress(copy);
+		NavigateToResource(IDR_HTML_ADDRESS_BOOK);
+		return S_OK;
+	}
+
+	// remove the data and recreate the data
+	m_addrBook.AddAddress(address);
+	UpdateAddressListCode();
+	NavigateToResource(IDR_HTML_ADDRESS_BOOK);
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonDeleteAddress(IHTMLElement* pElement)
+{
+	// get access key for getting the index of address
+	int key = GetAccessKeyFromHTML(_T("ModifyTable"));
+	m_addrBook.DeleteAddress(key);
+	UpdateAddressListCode();
+	NavigateToResource(IDR_HTML_ADDRESS_BOOK);
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonModifyAddressForm(IHTMLElement *pElement)
+{
+	
+	int key = GetAccessKeyFromHTML(pElement);
+	MyAddress* pAddress;
+
+	const static CString MODIFY_ID[] = {
+		_T("ADDRESS_ADD_NAME"), _T("ADDRESS_ADD_NUMBER1"), _T("ADDRESS_ADD_NUMBER2"), _T("ADDRESS_ADD_NUMBER3"),
+		_T("ADDRESS_ADD_HOME"), _T("ADDRESS_ADD_OFFICE"), _T("ADDRESS_ADD_EMAIL"), _T("ADDRESS_ADD_URL")
+	};
+
+	const static CString MODIFY_NAME[] = {
+		_T("Name"), _T("Number 1"), _T("Number 2"), _T("Number 3"),
+		_T("Home"), _T("Office"), _T("E-mail"), _T("URL")
+	};
+
+	
+	pAddress = m_addrBook.GetAddress(key - 1);
+
+	if (pAddress == nullptr) return S_FALSE;
+	
+	CString sData[8];
+
+	// load the data
+	sData[0] = pAddress->GetName().data();
+	sData[1] = pAddress->GetPhoneNumber(0).GetPhoneNumber().data();
+	sData[2] = pAddress->GetPhoneNumber(1).GetPhoneNumber().data();
+	sData[3] = pAddress->GetPhoneNumber(2).GetPhoneNumber().data();
+	sData[4] = pAddress->GetHomeAddress().data();
+	sData[5] = pAddress->GetOfficeAddress().data();
+	sData[6] = pAddress->GetEmail().data();
+	sData[7] = pAddress->GetURL().data();
+
+	// construct the code
+	m_sAddressBookModfyCode.Format(_T("<table id=\"ModifyTable\" accesskey=\"%d\">"), key - 1);
+
+	for (int i = 0; i < 8; ++i)
+	{
+		m_sAddressBookModfyCode += "<tr><td>" + MODIFY_NAME[i] + "</td><td><input type=\"text\" id=\"" + MODIFY_ID[i] +
+			"\" value=\"" + sData[i] + "\"</td></tr>";
+	}
+
+	m_sAddressBookModfyCode += "</table>";
+
+	// go to the modification form
+	NavigateToResource(IDR_HTML_ADDRESS_MODIFY);
+
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonSearch(IHTMLElement* pElement)
+{
+	CString searchName = GetValueFromHTML(_T("search"));
+	UpdateAddressListCode(searchName);
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonCall(IHTMLElement* pElement)
+{
+	MyAddress* pAddress;
+	int key = GetAccessKeyFromHTML(_T("ModifyTable"));
+	size_t i;
+	CString maker;
+	pAddress = m_addrBook.GetAddress(key);
+
+	maker.Format(_T("%d"), key);
+	m_sWhereToCallCode = _T("<table id=\"CallTable\" accesskey=\"" + maker + "\">");
+
+	for (i = 0; i < pAddress->GetPhoneNumbersSize(); ++i)
+	{
+		maker.Format(_T("%d"), i);
+		m_sWhereToCallCode += _T("<td><a href=\"#\" id=\"CALL_NUMBER\" accesskey=\"") + maker +
+			_T("\">") + pAddress->GetPhoneNumber(i).GetPhoneNumber().data() +
+			_T("</td></tr>");
+	}
+
+	m_sWhereToCallCode += _T("</table>");
+	NavigateToResource(IDR_HTML_WHERE_TO_CALL);
+	
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonCallNumber(IHTMLElement* pElement)
+{
+	MyAddress* pAddress;
+	int key = GetAccessKeyFromHTML(_T("CallTable"));
+	int callIndex = GetAccessKeyFromHTML(pElement);
+	CString sPhoneNumber;
+	PhoneNumber number;
+	pAddress = m_addrBook.GetAddress(key);
+	number = pAddress->GetPhoneNumber(callIndex);
+
+	sPhoneNumber.Format(_T("%s"), number.GetPhoneNumber().data());
+	AfxMessageBox(_T("You call ") + sPhoneNumber + _T(".\n Log is created in call log."));
+	
+	Call callLog;
+	callLog.SetCurrentTime();
+	callLog.SetReceiver(number);
+	m_addrBook.AddCall(callLog);
+	NavigateToResource(IDR_HTML_ADDRESS_BOOK);
+	m_previousHTMLResource = IDR_HTML_ADDRESS_BOOK;
+
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonPersonalMessage(IHTMLElement* pElement)
+{
+	int key = GetAccessKeyFromHTML(_T("ModifyTable"));
+	UpdatePersonalMessageListCode(key);
+	NavigateToResource(IDR_HTML_PERSONAL_MESSAGE);
+
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonSendMessage(IHTMLElement* pElement)
+{
+	CString value = GetValueFromHTML(_T("SEND_MESSAGE_TEXT"));
+	int key = GetAccessKeyFromHTML(_T("ModifyTable"));
+	PhoneNumber number = m_addrBook.GetAddress(key)->GetPhoneNumber(0);
+	SMSMessage message;
+	
+	message.SetReceiver(number);
+	message.SetMessage(value.GetBuffer());
+	message.SetCurrentTime();
+	value.ReleaseBuffer();
+	m_addrBook.AddMessage(message);
+
+	UpdatePersonalMessageListCode(key);
+	UpdateData(FALSE);
+	NavigateToResource(IDR_HTML_PERSONAL_MESSAGE);
+
+	return S_OK;
+}
+
+HRESULT CMyPhoneDlg::OnButtonMessageView(IHTMLElement* pElement)
+{
+	int key = GetAccessKeyFromHTML(pElement);
+	m_previousHTMLResource = IDR_HTML_MESSAGE;
+	UpdatePersonalMessageListCode(key);
+	NavigateToResource(IDR_HTML_PERSONAL_MESSAGE);
+	
+	return S_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+HRESULT CMyPhoneDlg::CheckSetAddressFromForm(MyAddress& address)
+{
 	CString input;
 	std::string buffer;
 
+	// static variables for processing by loop
 	const static CString ADDRESS_INFO[] = {
-		_T("ADDRESS_ADD_NAME"),
-		_T("ADDRESS_ADD_HOME"),
-		_T("ADDRESS_ADD_OFFICE"),
-		_T("ADDRESS_ADD_EMAIL"),
-		_T("ADDRESS_ADD_URL"),
+		_T("ADDRESS_ADD_NAME"), _T("ADDRESS_ADD_HOME"), _T("ADDRESS_ADD_OFFICE"), _T("ADDRESS_ADD_EMAIL"), _T("ADDRESS_ADD_URL"),
 	};
 
 	const static CString ERROR_MESSAGE[] = {
-		_T("Name is not valid syntax."),
-		_T("Home is not valid syntax."),
-		_T("Office is not valid syntax."),
-		_T("Email is not valid syntax."),
-		_T("URL is not valid syntax")
+		_T("Name is not valid syntax."), _T("Home is not valid syntax."), _T("Office is not valid syntax."),
+		_T("Email is not valid syntax."), _T("URL is not valid syntax")
 	};
 
 	int(MyAddress::*SetFunctions[])(std::string) = {
-		&MyAddress::SetName,
-		&MyAddress::SetHomeAddress,
-		&MyAddress::SetOfficeAddress,
-		&MyAddress::SetEmail,
-		&MyAddress::SetURL
+		&MyAddress::SetName, &MyAddress::SetHomeAddress, &MyAddress::SetOfficeAddress, &MyAddress::SetEmail, &MyAddress::SetURL
 	};
 
+	// check and set data respectively
 	for (int i = 0; i < sizeof(SetFunctions) / sizeof(void*); ++i)
 	{
-		
 		input = GetValueFromHTML(ADDRESS_INFO[i]);
 		input = input.Trim();
+
+		if (!i && input.Find(_T('\'')) >= 0 || input.Find(_T('\"')) >= 0)
+		{
+			AfxMessageBox(_T("Name is not valid syntax."));
+			return S_FALSE;
+		}
+
 		if (input.Trim().IsEmpty())
 		{
-			if(i != 0) continue;
+			if (i != 0) continue;
+
 			AfxMessageBox(_T("You should input the name!"));
 			return S_FALSE;
 		}
@@ -241,16 +486,16 @@ HRESULT CMyPhoneDlg::OnButtonAddAddress(IHTMLElement *pElement)
 		input.ReleaseBuffer();
 	}
 
+	// set the number
 	int addCount = 0;
- 	for (int i = 1; i <= 3; ++i)
+	for (int i = 1; i <= 3; ++i)
 	{
 		CString id;
 		id.Format(_T("ADDRESS_ADD_NUMBER%d"), i);
-		input = GetValueFromHTML(id);
-		input = input.Trim();
+		input = GetValueFromHTML(id); input = input.Trim();
 		if (input.IsEmpty()) continue;
 		buffer = input.GetBuffer();
-		
+
 		try
 		{
 			PhoneNumber number(buffer);
@@ -262,55 +507,245 @@ HRESULT CMyPhoneDlg::OnButtonAddAddress(IHTMLElement *pElement)
 			return S_FALSE;
 		}
 
+		if (!m_addrBook.CheckValidAddress(address))
+		{
+			AfxMessageBox(_T("The number already exists in your book."));
+			return S_FALSE;
+		}
+
 		input.ReleaseBuffer();
 		addCount++;
 	}
 
-	if (!addCount)
+	if (!addCount)	// if there is no phone number written
 	{
 		AfxMessageBox(_T("You should input more than one phone number."));
 		return S_FALSE;
 	}
 
-	m_addrBook.AddAddress(address);
-	UpdateAddressListCode();
-	NavigateToResource(IDR_HTML_ADDRESS_BOOK);
-	return S_OK;
-}
-
-HRESULT CMyPhoneDlg::OnButtonModifyAddress(IHTMLElement *pElement)
-{
-	BSTR tmp;
-	VARIANT vData;
-	pElement->getAttribute(L"accesskey", 2, &vData);
-	tmp = vData.bstrVal;
-	
-	AfxMessageBox((CString)tmp);
 	return S_OK;
 }
 
 void CMyPhoneDlg::UpdateAddressListCode(void)
 {
+	MyAddress* addr;
+	size_t index = 0;
+
 	m_sAddressListCode = "<table>";
 
-	size_t index = 0;
-	MyAddress* addr;
-
+	// load the addresses from phone address book
 	while (addr = m_addrBook.GetAddress(index++))
 	{
 		CString name, phoneNumber, accessKey;
 		name.Format(_T("%s"), addr->GetName().data());
 		phoneNumber.Format(_T("%s"), addr->GetPhoneNumber(0).GetPhoneNumber().data());
 		accessKey.Format(_T("%d"), index);
-		m_sAddressListCode += "<tr><td><a href=\"#\" id=\"BUTTON_MODIFY_ADDRESS\" accesskey=\"" + accessKey 
+		m_sAddressListCode += "<tr><td><a href=\"#\" id=\"BUTTON_MODIFY_ADDRESS\" accesskey=\"" + accessKey
 			+ "\">" + name + "</a></td><td>" + phoneNumber + "</tr>";
 	}
 
 	m_sAddressListCode += "</table>";
 }
 
+void CMyPhoneDlg::UpdateAddressListCode(CString search)
+{
+	if (search.Trim() == "")
+	{
+		UpdateAddressListCode();
+		return;
+	}
+
+	MyAddress* addr;
+	LPSTR searchingName = search.GetBuffer();
+	size_t index = m_addrBook.SearchAddress(searchingName);
+	
+	m_sAddressListCode = "<table>";
+
+	// load the addresses from phone address book
+	while (addr = m_addrBook.GetAddress(index++))
+	{
+		if (addr->GetName() != searchingName) break;
+
+		CString name, phoneNumber, accessKey;
+		name.Format(_T("%s"), addr->GetName().data());
+		phoneNumber.Format(_T("%s"), addr->GetPhoneNumber(0).GetPhoneNumber().data());
+		accessKey.Format(_T("%d"), index);
+		m_sAddressListCode += "<tr><td><a href=\"#\" id=\"BUTTON_MODIFY_ADDRESS\" accesskey=\"" + accessKey
+			+ "\">" + name + "</a></td><td>" + phoneNumber + "</tr>";
+	}
+
+	m_sAddressListCode += "</table>";
+
+	search.ReleaseBuffer();
+}
+
+void CMyPhoneDlg::UpdateCallLogListCode(void)
+{
+	Call* pLog;
+	size_t index = 0;
+	int addrIndex;
+	PhoneNumber sender, receiver, number;
+	CString maker, date, tmp;
+	m_sCallLogCode = _T("<table>");
+
+	while (pLog = m_addrBook.GetCall(index++))
+	{
+		maker = _T("<tr><td>");
+		
+		sender = pLog->GetSender();
+		receiver = pLog->GetReceiver();
+		
+		if (sender.IsEmpty() && !receiver.IsEmpty()) {
+			maker += _T("To");
+			number = receiver;
+		}
+		else if (!sender.IsEmpty() && receiver.IsEmpty())
+		{
+			maker += _T("From");
+			number = sender;
+		}
+		else continue;
+		
+		addrIndex = m_addrBook.SearchAddress(number);
+
+		tmp.Format(_T("%d"), addrIndex + 1);
+
+		if (addrIndex >= 0)
+			maker += CString(_T("</td><td><a href=\"#\" id=\"BUTTON_MODIFY_ADDRESS\" accesskey=\""))
+			+ tmp + _T("\">");
+		else
+			maker += CString(_T("</td><td>"));
+
+		if (addrIndex < 0) maker += number.GetPhoneNumber().data();
+		else maker += CString(m_addrBook.GetAddress((size_t)addrIndex)->GetName().data()) + _T("</a>");
+
+		maker += _T("</td><td>");
+		date.Format(_T("%04d.%02d.%02d %02d:%02d:%02d"), pLog->GetYear(), pLog->GetMonth(), pLog->GetDay(),
+			pLog->GetHour(), pLog->GetMinute(), pLog->GetSecond());
+
+		maker += date + _T("</td></tr>");
+		m_sCallLogCode += maker;
+	}
+
+	m_sCallLogCode += _T("</table>");
+}
+
+void CMyPhoneDlg::UpdatePersonalMessageListCode(int key)
+{
+	MyAddress* pAddress;
+	//int key = GetAccessKeyFromHTML(_T("ModifyTable"));
+	int index;
+	CString maker, date;
+	SMSMessage* msg;
+	pAddress = m_addrBook.GetAddress(key);
+
+	maker.Format(_T("%d"), key);
+	maker = "<table id=\"ModifyTable\" accesskey=\"" + maker + "\">";
+
+	index = m_addrBook.SearchFirstMessage(pAddress->GetPhoneNumber(0));
+
+	while (index >= 0 && (msg = m_addrBook.GetMessage(index)))
+	{
+		msg = m_addrBook.GetMessage(index);
+		if (msg->GetSender() == pAddress->GetPhoneNumber(0) || msg->GetReceiver() == pAddress->GetPhoneNumber(0))
+		{
+			maker += _T("<tr><td class=\"");
+			if (msg->GetSender().IsEmpty()) maker += _T("send");
+			else maker += _T("receive");
+			maker += CString(_T("\">")) + msg->GetMessage().data() + _T("<br /><span>");
+			date.Format(_T("%04d.%02d.%02d %02d:%02d:%02d"), msg->GetYear(), msg->GetMonth(), msg->GetDay(),
+				msg->GetHour(), msg->GetMinute(), msg->GetSecond());
+			maker += date + _T("</span></td></tr>");
+		}
+
+		else break;
+		index++;
+	}
+	
+	maker += "</table>";
+	m_sPersonalMessageBoxCode = maker;
+}
+
+void CMyPhoneDlg::UpdateMessageListCode(void)
+{
+	std::list<std::pair<std::string, int> > msgList;
+	std::vector<CommunicationObject> msgSorted;
+	size_t i;
+	int index = 0;
+	PhoneNumber number;
+	CString maker;
+	
+	// copy all messages
+	msgSorted.resize(m_addrBook.GetMessageCount());
+	for (i = 0; i < m_addrBook.GetMessageCount(); ++i)
+	{
+		msgSorted[i] = *(m_addrBook.GetMessage(i));
+	}
+
+	// sorts by time
+	std::sort(msgSorted.begin(), msgSorted.end());
+
+	for (auto it = msgSorted.rbegin(); it != msgSorted.rend(); ++it)
+	{
+		number = it->GetSender();
+		if (number.IsEmpty()) number = it->GetReceiver();
+
+		bool bExist = false;
+		for (auto it2 = msgList.begin(); it2 != msgList.end(); ++it2)
+		{
+			if (it2->first == number.GetPhoneNumber()) {
+				++(it2->second);
+				bExist = true;
+				break;
+			}
+		}
+
+		if (!bExist) msgList.push_back(std::make_pair<std::string, int>(number.GetPhoneNumber(), 1));
+	}
+
+	m_sMessageListCode = _T("<table>");
+
+	for (auto it = msgList.begin(); it != msgList.end(); ++it)
+	{
+		PhoneNumber number;
+		
+		try {
+			number.SetPhoneNumber(it->first);
+		}
+		catch (NotPhoneNumberException e)
+		{
+			continue;
+		}
+
+		m_sMessageListCode += _T("<tr><td><span>");
+
+		if ((index = m_addrBook.SearchAddress(number)) < 0)
+		{
+			m_sMessageListCode += it->first.data();
+		}
+
+		else
+		{
+			maker.Format(_T("%d"), index);
+			m_sMessageListCode += _T("<a href=\"#\" id=\"MESSAGE_VIEW\" accesskey=\"") + maker + _T("\">");
+			m_sMessageListCode += CString(m_addrBook.GetAddress(index)->GetName().data()) + _T("</a>");
+		}
+
+		m_sMessageListCode += _T("</span><br />");
+
+		maker.Format(_T("%d Message"), it->second);
+		if (it->second >= 2) maker += _T("s");
+
+		m_sMessageListCode += maker + _T("</td></tr>");
+	}
+
+	m_sMessageListCode += _T("</table>");
+}
+
+
 void CMyPhoneDlg::NavigateToResource(UINT nResource)
 {
+	// go to the HTML site in resource
 	HINSTANCE hInstance = AfxGetResourceHandle();
 	ASSERT(hInstance != NULL);
 
@@ -326,6 +761,7 @@ void CMyPhoneDlg::NavigateToResource(UINT nResource)
 
 CString CMyPhoneDlg::GetValueFromHTML(CString id)
 {
+	// get a value from elemeent by ID
 	IHTMLElement *psrcElement;
 	VARIANT vData;
 
@@ -336,4 +772,55 @@ CString CMyPhoneDlg::GetValueFromHTML(CString id)
 	CString ret = (CString)strTemp;
 
 	return ret;
+}
+
+int CMyPhoneDlg::GetAccessKeyFromHTML(CString id)
+{
+	// get an access key from element by ID
+	IHTMLElement *psrcElement;
+	VARIANT vData;
+	int ret;
+
+	GetElement(id, &psrcElement);
+	psrcElement->getAttribute(L"accesskey", 2, &vData);
+
+	BSTR strTemp = vData.bstrVal;
+	CString sOut = (CString)strTemp;
+	LPTSTR stringNumber = sOut.GetBuffer();
+	ret = atoi(stringNumber);
+	sOut.ReleaseBuffer();
+
+	return ret;
+}
+
+int	CMyPhoneDlg::GetAccessKeyFromHTML(IHTMLElement *pElement)
+{
+	// get an access key from element by an instance
+	VARIANT vData;
+	int ret;
+
+	pElement->getAttribute(L"accesskey", 2, &vData);
+	 
+	BSTR strTemp = vData.bstrVal;
+	CString sOut = (CString)strTemp;
+	LPTSTR stringNumber = sOut.GetBuffer();
+	ret = atoi(stringNumber);
+	sOut.ReleaseBuffer();
+
+	return ret;
+}
+
+void CMyPhoneDlg::OnClose()
+{
+	m_addrBook.SaveAddressFile(ADDRESS_DATA_FILE);
+	m_addrBook.SaveCallsFile(CALL_DATA_FILE);
+	m_addrBook.SaveMessageFile(MESSAGE_DATA_FILE);
+	CDHtmlDialog::OnClose();
+}
+
+
+BOOL CMyPhoneDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->wParam == VK_ESCAPE || pMsg->wParam == VK_RETURN) return TRUE;
+	return CDHtmlDialog::PreTranslateMessage(pMsg);
 }
