@@ -16,16 +16,16 @@ class CommunicationObject
 {
 /* Member Variables */
 protected :
-	PhoneNumber		m_sender;
+	PhoneNumber		m_sender, m_receiver;
 	int				m_timeYear, m_timeMonth, m_timeDay;
 	int				m_timeHour, m_timeMinute, m_timeSecond;
 
 /* Constructor & Destructor */
 public :
 	CommunicationObject();
-	CommunicationObject(PhoneNumber phoneNumber);
+	CommunicationObject(PhoneNumber sender, PhoneNumber receiver);
 	CommunicationObject(const CommunicationObject& object);
-	CommunicationObject(PhoneNumber phoneNumber, int year, int month, int day, int hour, int minute, int second);
+	CommunicationObject(PhoneNumber phoneNumber, PhoneNumber receiver, int year, int month, int day, int hour, int minute, int second);
 	~CommunicationObject();
 
 /* Methods */
@@ -33,6 +33,10 @@ public :
 	virtual int				SetSender(PhoneNumber senderNumber);
 	virtual int				SetSender(std::string senderNumber);
 	virtual PhoneNumber		GetSender(void) const;
+
+	virtual int				SetReceiver(PhoneNumber receiverNumber);
+	virtual int				SetReceiver(std::string receiverNumber);
+	virtual PhoneNumber		GetReceiver(void) const;
 
 	void					SetCurrentTime();
 

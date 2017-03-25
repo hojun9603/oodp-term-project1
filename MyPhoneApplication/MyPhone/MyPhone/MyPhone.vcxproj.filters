@@ -16,6 +16,9 @@
     <Filter Include="헤더 파일\PhoneLibrary">
       <UniqueIdentifier>{53043b60-1322-4c51-8017-c14a3dbfa9fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="HTML Files">
+      <UniqueIdentifier>{3775ddd3-4447-45c9-ae6b-e69b85e03b8d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -70,18 +73,36 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MyPhone.htm" />
     <None Include="res\MyPhone.rc2">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="res\gif1.bin">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="AddressBook.htm" />
-    <None Include="res\Messages.htm" />
-    <None Include="res\calllog.htm" />
-    <None Include="res\AddAddress.htm" />
-    <None Include="res\modifyAddress.htm" />
+    <None Include="res\AddAddress.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\calllog.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\Messages.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\modifyAddress.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\whereToCall.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\personalMessage.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\AddressBook.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="res\MyPhone.htm">
+      <Filter>HTML Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MyPhone.rc">

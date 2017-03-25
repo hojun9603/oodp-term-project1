@@ -11,9 +11,9 @@ class Call : public CommunicationObject
 /* Constructors & Destructor */
 public :
 	Call();
-	Call(PhoneNumber phoneNumber);
+	Call(PhoneNumber sender, PhoneNumber receiver);
 	Call(const Call& object);
-	Call(PhoneNumber phoneNumber, int year, int month, int day, int hour, int minute, int second);
+	Call(PhoneNumber sender, PhoneNumber receiver, int year, int month, int day, int hour, int minute, int second);
 	~Call();
 };
 

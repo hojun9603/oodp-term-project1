@@ -4,6 +4,11 @@
 
 #pragma once
 
+#if defined GetMessage
+#undef GetMessage
+
 #include "MyAddressBook.h"
+
+#endif
 
 #endif

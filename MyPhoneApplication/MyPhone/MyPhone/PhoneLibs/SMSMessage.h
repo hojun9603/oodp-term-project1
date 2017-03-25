@@ -15,10 +15,10 @@ protected :
 /* Constructors & Destructor */
 public :
 	SMSMessage();
-	SMSMessage(PhoneNumber phoneNumber);
-	SMSMessage(PhoneNumber phoneNumber, std::string message);
+	SMSMessage(PhoneNumber sender, PhoneNumber receiver);
+	SMSMessage(PhoneNumber sender, PhoneNumber receiver, std::string message);
 	SMSMessage(const SMSMessage& object);
-	SMSMessage(PhoneNumber phoneNumber, std::string message, int year, int month, int day, int hour, int minute, int second);
+	SMSMessage(PhoneNumber sender, PhoneNumber receiver, std::string message, int year, int month, int day, int hour, int minute, int second);
 	~SMSMessage();
 
 /* Methods */
@@ -28,6 +28,12 @@ public :
 
 	friend std::ostream&	operator<<(std::ostream& out, const SMSMessage&);
 	friend std::istream&	operator>>(std::istream& in, SMSMessage&);
+
+/* Operation Overriding */
+	bool					operator>(const SMSMessage& operand);
+	bool					operator>=(const SMSMessage& operand);
+	bool					operator<(const SMSMessage& operand);
+	bool					operator<=(const SMSMessage& operand);
 };
 
 #endif	/* end of _SMS_MESSAGE_H_ */

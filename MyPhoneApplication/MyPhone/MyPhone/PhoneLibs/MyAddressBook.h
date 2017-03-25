@@ -42,6 +42,7 @@ public :
 	int				UpdateAddress(size_t index, MyAddress& address);
 	int				SearchAddress(std::string name);
 	int				SearchAddress(const PhoneNumber& phoneNumber);
+	size_t			GetAddressCount(void) const;
 
 	bool			CheckValidAddress(MyAddress address);
 
@@ -55,10 +56,13 @@ public :
 	int				AddCall(Call& call);
 	int				DeleteCall(size_t index);
 	Call*			GetCall(size_t index);
+	size_t			GetCallCount(void) const;
 
 	int				AddMessage(SMSMessage& message);
 	int				DeleteMessage(size_t index);
 	SMSMessage*		GetMessage(size_t index);
+	int				SearchFirstMessage(const PhoneNumber& number);
+	size_t			GetMessageCount(void) const;
 
 	int				SortAddressByName();
 	int				SortAddressByGroup();
