@@ -344,24 +344,45 @@ std::string  MyAddressBook::GetStringData(std::string title)
 	return "";
 }
 
-int MyAddressBook::SaveAddressFile(std::string fileName)
+int	MyAddressBook::SaveAddressFile(std::string fileName)
 {
-	std::ofstream outputFile;
+	std::fstream MyAddressBookSaveFile;
 
-	// if FAILED to open the file
-	outputFile.open(fileName);
-	if(!outputFile.is_open()) return 1;
+	std::vector<MyAddress>::iterator addressIndex = m_myAddresses.begin();
+	int i = 0;
 
-	outputFile << MY_ADDRBOOK_DATA_GROUP << "=" << GetStringData(MY_ADDRBOOK_DATA_GROUP);
-	outputFile << std::endl;
+	MyAddressBookSaveFile.open(fileName, std::ios::out);
 
-	for (auto it = m_myAddresses.begin(); it != m_myAddresses.end(); ++it)
+
+	if (MyAddressBookSaveFile.is_open() == false)							// error : no file, no save. return 1
 	{
-		outputFile << std::endl << *it;
+		std::cout << "error : there is no file to open" << std::endl;
+		return 1;
 	}
 
-	outputFile.close();
+	else																	// open file and copy the values to save 
+	{
+
+		for (addressIndex = m_myAddresses.begin(); addressIndex < m_myAddresses.end(); addressIndex++)
+		{
+			MyAddressBookSaveFile << "[ADDRESS START]" << std::endl;
+
+			MyAddressBookSaveFile <<
+				"NAME			  = " << addressIndex->GetName() << std::endl <<
+				"TELEPHONENUMBERS = " << addressIndex->GetPhoneNumber(0).GetPhoneNumber() << " " << addressIndex->GetPhoneNumber(1).GetPhoneNumber() << " " << addressIndex->GetPhoneNumber(2).GetPhoneNumber() << std::endl <<
+				"HOME			  = " << addressIndex->GetHomeAddress() << std::endl <<
+				"OFFICE           = " << addressIndex->GetOfficeAddress() << std::endl <<
+				"EMAIL		      = " << addressIndex->GetEmail() << std::endl <<
+				"URL			  = " << addressIndex->GetURL() << std::endl;
+			//"BIRTHDAY = "		  << address.GetBirthdayYear() << " / " << address.GetBirthdayMonth << " / " << address.GetBirthdayDay << endl <<
+
+			MyAddressBookSaveFile << "[ADDRESS END]" << std::endl;
+		}
+		MyAddressBookSaveFile.close();
+
+	}
 	return 0;
+
 }
 
 int	MyAddressBook::LoadAddressFile(std::string fileName)
